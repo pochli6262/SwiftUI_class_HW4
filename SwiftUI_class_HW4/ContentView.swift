@@ -30,6 +30,39 @@ struct JojoSong: Identifiable {
     let coverImages: [String]
 }
 
+struct ContentView: View {
+    @StateObject private var audioManager = AudioPlayerManager.shared
+
+    var body: some View {
+        ZStack {
+            TabView {
+                Tab("角色", systemImage: "person.3") {
+                    CharacterListView(characters: jojoCharacters)
+                }
+                
+                Tab("替身", systemImage: "sparkles") {
+                    StandListView(stands: jojoStands)
+                }
+                
+                Tab("主題曲", systemImage: "music.note") {
+                    SongListView(songs: jojoSongs)
+                }
+            }
+            .tabViewStyle(.automatic)
+            .toolbarBackground(.visible, for: .tabBar)
+            .toolbarBackground(Color(uiColor: .systemBackground), for: .tabBar)
+            
+            VStack {
+                Spacer()
+                MiniPlayerView()
+                    .environmentObject(audioManager)
+                    .padding(.bottom, 50)
+            }
+        }
+    }
+}
+
+
 let jojoCharacters = [
     JojoCharacter(name: "喬魯諾・喬巴拿", standName: "黃金體驗 / 黃金體驗鎮魂曲", description: "第五部的主角，有著DIO與喬斯達家族的血統，目標是成為流氓巨星。故事最後成為熱情的新首領。", quote: "我有一個夢想。", imageName: "Giorno Giovanna", voiceFileName: "kono_giorno_giovanna", part: "Part 5"),
     JojoCharacter(name: "布加拉提", standName: "鋼鍊手指", description: "布加拉提小隊的領導者，擁有拉鍊能力，忠誠可靠。為了保護特莉休叛變組織。", quote: "Arrivederci...", imageName: "Bruno Bucciarati", voiceFileName: "sticki_finger_sfx",part: "Part 5"),
@@ -195,372 +228,8 @@ let jojoSongs = [
 ]
 
 
-struct ContentView: View {
-    @StateObject private var audioManager = AudioPlayerManager.shared
-
-    var body: some View {
-        ZStack {
-            TabView {
-                Tab("角色", systemImage: "person.3") {
-                    CharacterListView(characters: jojoCharacters)
-                }
-                
-                Tab("替身", systemImage: "sparkles") {
-                    StandListView(stands: jojoStands)
-                }
-                
-                Tab("主題曲", systemImage: "music.note") {
-                    SongListView(songs: jojoSongs)
-                }
-            }
-            .tabViewStyle(.automatic)
-            .toolbarBackground(.visible, for: .tabBar)
-            .toolbarBackground(Color(uiColor: .systemBackground), for: .tabBar)
-            
-            VStack {
-                Spacer()
-                MiniPlayerView()
-                    .environmentObject(audioManager)
-                    .padding(.bottom, 50)
-            }
-        }
-    }
-}
-
-
-
-
-struct CharacterListView: View {
-    let characters: [JojoCharacter]
-    @State private var player: AVAudioPlayer? = nil
-
-
-    var body: some View {
-        NavigationStack {
-            ZStack(alignment: .topLeading) {
-                Image("golden_wind_background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .brightness(0.3)
-                
-                Image("jojo_title")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 160)
-                    .padding(.top, 80)
-                    .padding(.leading, 20)
-                
-                Color(uiColor: .systemBackground)
-                    .frame(maxHeight: 84)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .ignoresSafeArea(edges: .bottom)
-                
-                TabView {
-                    ForEach(characters) { character in
-                        VStack(spacing: 12) {
-                            Image(character.imageName)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(height: 420)
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-
-                            Text(character.name)
-                                .font(.title)
-                                .bold()
-                                .foregroundColor(.white)
-
-                            Text("替身：\(character.standName)")
-                                .font(.subheadline)
-                                .foregroundColor(.white)
-
-                            Text("「\(character.quote)」")
-                                .italic()
-                                .foregroundColor(.white)
-
-                            if let file = character.voiceFileName {
-                                Button("播放語音") {
-                                    let url = Bundle.main.url(forResource: file, withExtension: "mp3")!
-                                    player = try! AVAudioPlayer(contentsOf: url)
-                                    player?.play()
-                                }
-                                .foregroundColor(.blue)
-                            }
-                        }
-                        .padding()
-                        .frame(width: 300, height: 590)
-                        .background(
-                            Color.black.opacity(0.5)
-                                .cornerRadius(20)
-                        )
-                        .padding()
-                    }
-                }
-                .tabViewStyle(.page)
-            }
-        }
-    }
-}
-
-
-
-
-struct CharacterDetailView: View {
-    let character: JojoCharacter
-    @State private var player: AVAudioPlayer?
-
-    func playQuote() {
-        if let fileName = character.voiceFileName,
-           let url = Bundle.main.url(forResource: fileName, withExtension: "mp3") {
-            player = try? AVAudioPlayer(contentsOf: url)
-            player?.play()
-        }
-    }
-
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .center) {
-                Image(character.imageName)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(height: 600)
-                    .clipped()
-                    .cornerRadius(20)
-                
-                Text(character.name).font(.largeTitle).bold()
-                Text("替身：\(character.standName)")
-                Text("「\(character.quote)」")
-                    .italic().padding()
-                Button("播放語音") {
-                    playQuote()
-                }
-            }
-            .padding()
-        }
-        .navigationTitle(character.name)
-    }
-}
-
-struct StandListView: View {
-    let stands: [JojoStand]
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Image("stand_background")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .brightness(0.2)
-
-                ScrollView {
-                    VStack(spacing: 16) {
-                        ForEach(stands) { stand in
-                            NavigationLink(destination: StandDetailView(stand: stand)) {
-                                HStack(spacing: 16) {
-                                    Image(stand.imageName)
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(maxWidth: 80, maxHeight: 120)
-                                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        .shadow(radius: 4)
-
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text(stand.name)
-                                            .font(.headline)
-                                        Text("使用者：\(stand.user)")
-                                            .font(.subheadline)
-                                            .foregroundColor(.secondary)
-                                        Text("能力：\(stand.ability)")
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(2)
-                                    }
-                                }
-                                .padding()
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(Color(UIColor.systemBackground))
-                                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                                )
-                            }
-                        }
-                    }
-                    .padding(.vertical, 30)
-                }
-            }
-            .navigationTitle("替身介紹")
-        }
-    }
-}
-
-
-
-
-struct StandDetailView: View {
-    let stand: JojoStand
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .center, spacing: 16) {
-                Image(stand.imageName)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(radius: 5)
-
-                Text(stand.name)
-                    .font(.title)
-                    .bold()
-
-                Text("使用者：\(stand.user)")
-                    .font(.headline)
-
-                Text("能力介紹")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Text(stand.fullDescription)
-                    .font(.body)
-                    .multilineTextAlignment(.leading)
-
-
-                Text(stand.ability)
-                    .font(.body)
-                    .multilineTextAlignment(.leading)
-                    .padding(.horizontal)
-
-                Divider()
-
-                VStack(spacing: 12) {
-                    Text("能力數值")
-                        .font(.headline)
-
-                    // 第一列：名稱
-                    HStack {
-                        Text("射程距離").frame(maxWidth: .infinity)
-                        Text("成長性").frame(maxWidth: .infinity)
-                        Text("持續力").frame(maxWidth: .infinity)
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                    // 第一列：數值
-                    HStack {
-                        Text(stand.stats["射程距離"]!).bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["成長性"]!).bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["持續力"]!).bold().frame(maxWidth: .infinity)
-                    }
-                    .font(.title3)
-
-                    // 第二列：名稱
-                    HStack {
-                        Text("破壞力").frame(maxWidth: .infinity)
-                        Text("精密動作性").frame(maxWidth: .infinity)
-                        Text("速度").frame(maxWidth: .infinity)
-                    }
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-
-                    // 第二列：數值
-                    HStack {
-                        Text(stand.stats["破壞力"]!).bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["精密動作性"]!).bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["速度"]!).bold().frame(maxWidth: .infinity)
-                    }
-                    .font(.title3)
-                }
-                .padding(.horizontal)
-
-                Spacer(minLength: 40)
-            }
-        }
-        .navigationTitle(stand.name)
-    }
-}
-
-struct SongListView: View {
-    let songs: [JojoSong]
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                // 背景圖片
-                Image("綠黃背景")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
-                    .brightness(0.2)
-
-                List(songs) { song in
-                    NavigationLink(destination: SongPageView(song: song)) {
-                        HStack(spacing: 12) {
-                            Image(song.coverImages.first ?? "黃金體驗鎮魂曲")
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 80, height: 80)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(song.title)
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                Text(song.description)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
-                        }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color(UIColor.systemBackground))
-                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                        )
-                    }
-                    .listRowBackground(Color.clear)
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets())
-                    .padding(.vertical, 8)
-                }
-                .scrollContentBackground(.hidden)
-                .background(Color.clear)
-                .padding(.vertical, 100)//
-
-            }
-            .navigationTitle("主題曲")
-        }
-    }
-}
-
-
-struct SongPageView: View {
-    let song: JojoSong
-
-    var body: some View {
-        VStack {
-            Button("播放 \(song.title)") {
-                AudioPlayerManager.shared.playSong(named: song.title)
-            }
-
-            ForEach(song.coverImages, id: \.self) { image in
-                Image(image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 300)
-            }
-        }
-        .navigationTitle(song.title)
-    }
-}
-
-
-
-
 #Preview {
     ContentView()
 }
+
+
