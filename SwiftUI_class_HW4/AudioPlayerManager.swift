@@ -11,21 +11,17 @@ class AudioPlayerManager: ObservableObject {
     private var player: AVAudioPlayer?
 
     func playSong(named name: String) {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "mp3") else {
-            return
-        }
+        let url = Bundle.main.url(forResource: name, withExtension: "mp3")!
+        let loadedPlayer = try! AVAudioPlayer(contentsOf: url)
 
-        if let loadedPlayer = try? AVAudioPlayer(contentsOf: url) {
-            loadedPlayer.numberOfLoops = -1
-            loadedPlayer.volume = 0.3
-            loadedPlayer.play()
-            player = loadedPlayer
-            isPlaying = true
-            currentSongTitle = name
-        }
+        loadedPlayer.numberOfLoops = -1
+        loadedPlayer.volume = 0.3
+        loadedPlayer.play()
+
+        player = loadedPlayer
+        isPlaying = true
+        currentSongTitle = name
     }
-
-
 
     func togglePlayPause() {
         guard let player = player else { return }

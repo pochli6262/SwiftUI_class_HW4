@@ -1,5 +1,6 @@
 import SwiftUI
 import Foundation
+import AVFoundation
 
 struct JojoCharacter: Identifiable {
     var id: String { name }
@@ -185,6 +186,11 @@ let jojoSongs = [
         title: "Torture Dance",
         description: "Torture Dance",
         coverImages: ["torture dance"]
+    ),
+    JojoSong(
+        title: "Requiem",
+        description: "Requiem",
+        coverImages: ["Requiem"]
     )
 ]
 
@@ -202,7 +208,7 @@ struct ContentView: View {
                 Tab("替身", systemImage: "sparkles") {
                     StandListView(stands: jojoStands)
                 }
-
+                
                 Tab("主題曲", systemImage: "music.note") {
                     SongListView(songs: jojoSongs)
                 }
@@ -210,7 +216,6 @@ struct ContentView: View {
             .tabViewStyle(.automatic)
             .toolbarBackground(.visible, for: .tabBar)
             .toolbarBackground(Color(uiColor: .systemBackground), for: .tabBar)
-            
             
             VStack {
                 Spacer()
@@ -223,7 +228,7 @@ struct ContentView: View {
 }
 
 
-import AVFoundation
+
 
 struct CharacterListView: View {
     let characters: [JojoCharacter]
@@ -285,7 +290,7 @@ struct CharacterListView: View {
                         .padding()
                         .frame(width: 300, height: 590)
                         .background(
-                            Color.black.opacity(0.4)
+                            Color.black.opacity(0.5)
                                 .cornerRadius(20)
                         )
                         .padding()
@@ -299,7 +304,6 @@ struct CharacterListView: View {
 
 
 
-import AVFoundation
 
 struct CharacterDetailView: View {
     let character: JojoCharacter
@@ -349,27 +353,10 @@ struct StandListView: View {
                     .scaledToFill()
                     .ignoresSafeArea()
                     .brightness(0.2)
-                
-                Color(uiColor: .systemBackground)
-                    .frame(maxHeight: 84)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .ignoresSafeArea(edges: .bottom)
 
-                VStack(spacing: 0) {
-                    ZStack(alignment: .leading) {
-                        Color(.systemGray6)
-                            .opacity(0.6)
-                            .frame(height: 80)
-                            .ignoresSafeArea(edges: .top)
-
-                        Text("替身圖鑑")
-                            .font(.largeTitle.bold())
-                            .padding(.leading, 20)
-                            .padding(.top, 40)
-                    }
-
-                    NavigationStack {
-                        List(stands) { stand in
+                ScrollView {
+                    VStack(spacing: 16) {
+                        ForEach(stands) { stand in
                             NavigationLink(destination: StandDetailView(stand: stand)) {
                                 HStack(spacing: 16) {
                                     Image(stand.imageName)
@@ -398,17 +385,12 @@ struct StandListView: View {
                                         .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                                 )
                             }
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets())
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 4)
                         }
-                        .scrollContentBackground(.hidden)
-                        .background(Color.clear)
                     }
+                    .padding(.vertical, 30)
                 }
             }
+            .navigationTitle("替身介紹")
         }
     }
 }
@@ -467,9 +449,9 @@ struct StandDetailView: View {
 
                     // 第一列：數值
                     HStack {
-                        Text(stand.stats["射程距離"] ?? "？").bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["成長性"] ?? "？").bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["持續力"] ?? "？").bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["射程距離"]!).bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["成長性"]!).bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["持續力"]!).bold().frame(maxWidth: .infinity)
                     }
                     .font(.title3)
 
@@ -484,9 +466,9 @@ struct StandDetailView: View {
 
                     // 第二列：數值
                     HStack {
-                        Text(stand.stats["破壞力"] ?? "？").bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["精密動作性"] ?? "？").bold().frame(maxWidth: .infinity)
-                        Text(stand.stats["速度"] ?? "？").bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["破壞力"]!).bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["精密動作性"]!).bold().frame(maxWidth: .infinity)
+                        Text(stand.stats["速度"]!).bold().frame(maxWidth: .infinity)
                     }
                     .font(.title3)
                 }
@@ -494,7 +476,6 @@ struct StandDetailView: View {
 
                 Spacer(minLength: 40)
             }
-            .padding()
         }
         .navigationTitle(stand.name)
     }
@@ -513,69 +494,45 @@ struct SongListView: View {
                     .ignoresSafeArea()
                     .brightness(0.2)
 
-                // 底部遮色背景
-                Color(uiColor: .systemBackground)
-                    .frame(maxHeight: 84)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                    .ignoresSafeArea(edges: .bottom)
+                List(songs) { song in
+                    NavigationLink(destination: SongPageView(song: song)) {
+                        HStack(spacing: 12) {
+                            Image(song.coverImages.first ?? "黃金體驗鎮魂曲")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 80, height: 80)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                VStack(spacing: 0) {
-                    // 頂部灰色區 + 標題
-                    ZStack(alignment: .leading) {
-                        Color(.systemGray6)
-                            .opacity(0.6)
-                            .frame(height: 80)
-                            .ignoresSafeArea(edges: .top)
-
-                        Text("主題曲介紹")
-                            .font(.largeTitle.bold())
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 60)
-                            .padding(.top, 40)
-                    }
-
-                    // 清單內容
-                    NavigationStack {
-                        List(songs) { song in
-                            NavigationLink(destination: SongPageView(song: song)) {
-                                HStack(spacing: 12) {
-                                    Image(song.coverImages.first ?? "黃金體驗鎮魂曲")
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 80, height: 80)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
-
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text(song.title)
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                        Text(song.description)
-                                            .font(.caption)
-                                            .foregroundColor(.secondary)
-                                            .lineLimit(1)
-                                    }
-
-                                    Spacer()
-                                }
-                                .padding()
-                                .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(Color(UIColor.systemBackground))
-                                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                                )
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(song.title)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text(song.description)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
                             }
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(EdgeInsets())
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
+
+                            Spacer()
                         }
-                        .scrollContentBackground(.hidden)
-                        .background(Color.clear)
-                        .padding(.horizontal, 30)
+                        .padding()
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(UIColor.systemBackground))
+                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        )
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets())
+                    .padding(.vertical, 8)
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .padding(.vertical, 100)//
+
             }
+            .navigationTitle("主題曲")
         }
     }
 }
@@ -587,7 +544,6 @@ struct SongPageView: View {
     var body: some View {
         VStack {
             Button("播放 \(song.title)") {
-                print("🎵 播放音樂：\(song.title)")
                 AudioPlayerManager.shared.playSong(named: song.title)
             }
 
