@@ -16,15 +16,18 @@ struct MiniPlayerView: View {
             title: "Torture Dance",
             description: "Torture Dance",
             coverImages: ["torture dance"]
+        ),
+        JojoSong(
+            title: "Requiem",
+            description: "Requiem",
+            coverImages: ["Requiem"]
         )
     ]
     
     @EnvironmentObject var audioManager: AudioPlayerManager
 
-    var currentCoverImage: String? {
-        Self.jojoSongs.first(where: {
-            $0.title == audioManager.currentSongTitle
-        })?.coverImages.first
+    var currentCoverImage: String? {Self.jojoSongs.first(where: {
+            $0.title == audioManager.currentSongTitle})?.coverImages.first
     }
 
     var body: some View {
